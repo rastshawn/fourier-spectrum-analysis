@@ -87,8 +87,31 @@ def main():
 
 def processFile(filename, numPitches):
     frameArray = getFrameArray(filename)
-    frameArray = frameArray[0:32768] # must be power of 2
+    #frameArray = frameArray[0:32768] # must be power of 2
+    
+    # set up rolling capture of 32768 frames
+    
+    numFrames = len(frameArray)
+
+    if (numFrames < 32768):
+        return False # sample not long enough
+
+    for i in range(32768, numFrames):
+        frameChunk = frameArray[(i - 32768) : i]
+        fftChunk(frameChunk, numPitches)
+
+# do FFT on a 32768-frame array.
+# 32768 is a good compromise because it's ~3/4 of a second
+# and allows for detection of frequencies from 0-16kHz
+# and is a power of 2 (2^15). 2^16 is 1.5s of audio and is too long
+# while 2^14 would only include pitches up to 8kHz which is likely not enough
+def fftChunk(frameArray, numPitches):
     n = len(frameArray)
+
+    # this function ONLY works with 32768 frames
+    if ( not n == 32768 ):
+        return False
+
     ff = fft(frameArray, n)
     sampleRate = 44100.0
 
@@ -113,5 +136,7 @@ def processFile(filename, numPitches):
     print("the %d top pitches are:" % (numPitches))
     for i in range(0, numPitches):
         print(frequencyValuePairs[i][0])
+
+   
 
 main()
