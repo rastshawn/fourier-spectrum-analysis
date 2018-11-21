@@ -16,7 +16,7 @@ def getFrameArray(filename):
         frameArray.append(num)
         nextFrame = wavFile.readframes(1)
 
-    return frameArray;
+    return frameArray
 
 # This is a Fast Fourier Transform using the Cooley–Tukey algorithm.
 # It calculates a discrete fourier transform in nlog(n) time.
@@ -80,22 +80,21 @@ def main():
         "mono wav file with a 44.1khz sample rate. Enter a relative path."
     )
 
-    filename = input("Filename: ");
+    filename = input("Filename: ")
     print("How many frequencies do you want to detect?")
     numFrequencies = int(input("Number of frequencies: "))
     processFile(filename, numFrequencies)
 
 def processFile(filename, numPitches):
-    frameArray = getFrameArray(filename);
+    frameArray = getFrameArray(filename)
     frameArray = frameArray[0:32768] # must be power of 2
     n = len(frameArray)
-    ff = fft(frameArray, n);
+    ff = fft(frameArray, n)
     sampleRate = 44100.0
 
-
-    frequencyValuePairs = [];
-    outputFreq = 0;
-    i = 0; 
+    frequencyValuePairs = []
+    outputFreq = 0
+    i = 0 
     while outputFreq < 2000:
         outputFreq = (i) * (sampleRate / n)
         val = abs(ff[i]) / n
