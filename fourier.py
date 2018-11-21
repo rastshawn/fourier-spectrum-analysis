@@ -2,6 +2,42 @@ import wave # for reading in wav files
 import struct # also for reading wav files
 import math # for complex numbers, math.pi and math.e
 
+
+
+
+
+
+def getPitchFromFrequency(frequency):
+	# https://en.wikipedia.org/wiki/Cent_(music)
+
+	# convert hertz to cents
+	
+	# we need something to base all of the calculations on
+	# octaves increment to the next octave at C, not A, so these things will look out of order
+	# trust me it works
+	c_zero = 16.35 # C0 is 16.35 Hz
+	
+	# number of cents between a note and a_zero is 1200 * log2(b / a_zero)
+	# so number of half steps is 12 * log2(b / a_zero)
+	# where b is the hertz of the second note
+
+	log2 = math.log(frequency / c_zero) / math.log(2)
+
+	cents_from_C = 1200 * log2
+	half_steps_from_C = int(cents_from_C / 100)
+
+	# for each cent, cycle through ABCDEFG and then 0+
+	notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+	octave = 0
+	
+	index = int(half_steps_from_C % 12)	
+	note = notes[index]
+	octave = int(half_steps_from_C / 12) # probably have to convert to int
+
+	return str(note) + str(octave) + ' sharp by ' + str((cents_from_C) - (100 * half_steps_from_C)) 
+
+
+
 # this takes a filename / relative path to a wav file 
 # it returns an array of signed shorts, 
 # corresponding to the sound pressure level / voltage of the 
@@ -135,8 +171,18 @@ def fftChunk(frameArray, numPitches):
 
     print("the %d top pitches are:" % (numPitches))
     for i in range(0, numPitches):
-        print(frequencyValuePairs[i][0])
+        print(getPitchFromFrequency(frequencyValuePairs[i][0]))
 
    
 
 main()
+
+
+# ideas
+# use standard deviations to see how many peaks there are?
+# use a lookup table to figure out pitch
+# pass in sound file from command line arg
+# use with recordings - instead of passing by 1-second chunks, pass instead by a rolling one-second chunk of frames
+# make fft work with frame counts that are not a power of 2, or alternatively a 1-second rolling chunk to skip the problem entirely
+
+ 
