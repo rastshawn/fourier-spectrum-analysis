@@ -4,37 +4,37 @@ import math # for complex numbers, math.pi and math.e
 
 
 
-
-
-
 def getPitchFromFrequency(frequency):
-	# https://en.wikipedia.org/wiki/Cent_(music)
+    # https://en.wikipedia.org/wiki/Cent_(music)
 
-	# convert hertz to cents
-	
-	# we need something to base all of the calculations on
-	# octaves increment to the next octave at C, not A, so these things will look out of order
-	# trust me it works
-	c_zero = 16.35 # C0 is 16.35 Hz
-	
-	# number of cents between a note and a_zero is 1200 * log2(b / a_zero)
-	# so number of half steps is 12 * log2(b / a_zero)
-	# where b is the hertz of the second note
+    # convert hertz to cents
+ 
+    # we need something to base all of the calculations on
+    # octaves increment to the next octave at C, not A, so these things will look out of order
+    # trust me it works
+    c_zero = 16.35 # C0 is 16.35 Hz
+ 
+    # number of cents between a note and a_zero is 1200 * log2(b / a_zero)
+    # so number of half steps is 12 * log2(b / a_zero)
+    # where b is the hertz of the second note
+    if (frequency == 0):
+        print("the frequency is ZERO, why?")
+        return "fix zero bug"
 
-	log2 = math.log(frequency / c_zero) / math.log(2)
+    log2 = math.log(frequency / c_zero) / math.log(2)
 
-	cents_from_C = 1200 * log2
-	half_steps_from_C = int(cents_from_C / 100)
+    cents_from_C = 1200 * log2
+    half_steps_from_C = int(cents_from_C / 100)
 
-	# for each cent, cycle through ABCDEFG and then 0+
-	notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-	octave = 0
-	
-	index = int(half_steps_from_C % 12)	
-	note = notes[index]
-	octave = int(half_steps_from_C / 12) # probably have to convert to int
+    # for each cent, cycle through ABCDEFG and then 0+
+    notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+    octave = 0
+ 
+    index = int(half_steps_from_C % 12) 
+    note = notes[index]
+    octave = int(half_steps_from_C / 12) # probably have to convert to int
 
-	return str(note) + str(octave) + ' sharp by ' + str((cents_from_C) - (100 * half_steps_from_C)) 
+    return str(note) + str(octave) + ' sharp by ' + str((cents_from_C) - (100 * half_steps_from_C)) 
 
 
 
@@ -93,6 +93,10 @@ def fft(frames, n):
         # to be calculated, which in a sense represents
         # how strong that particular frequency is 
         # in the complex waveform. 
+
+		# w really only needs to be calculated once for each index
+		# it could then be reused. Maybe make a lookup table
+		# where the indexes are (i*powerOf2) / n (?) 
         w = math.e ** complex(0, -2.0 * math.pi * i/n)
         left[i] = e + w * o
         right[i] = e - w * o
@@ -123,19 +127,23 @@ def main():
 
 def processFile(filename, numPitches):
     frameArray = getFrameArray(filename)
-    #frameArray = frameArray[0:32768] # must be power of 2
     
-    # set up rolling capture of 32768 frames
+    # this is the number of frames to be analyzed and must be a power of two
+    powerOf2Frames = 2 ** 13 
+    
+    # set up rolling capture of powerOf2Frames frames
     
     numFrames = len(frameArray)
 
-    if (numFrames < 32768):
-        return False # sample not long enough
+    if (numFrames < powerOf2Frames):
+        raise ValueError("the sample isn't long enough.");
 
-    for i in range(32768, numFrames):
-        frameChunk = frameArray[(i - 32768) : i]
+    for i in range(powerOf2Frames, numFrames):
+        frameChunk = frameArray[(i - powerOf2Frames) : i]
         fftChunk(frameChunk, numPitches)
 
+    frameChunk = frameArray[0:powerOf2Frames]
+    fftChunk(frameChunk, numPitches)
 # do FFT on a 32768-frame array.
 # 32768 is a good compromise because it's ~3/4 of a second
 # and allows for detection of frequencies from 0-16kHz
@@ -144,8 +152,7 @@ def processFile(filename, numPitches):
 def fftChunk(frameArray, numPitches):
     n = len(frameArray)
 
-    # this function ONLY works with 32768 frames
-    if ( not n == 32768 ):
+    if not ( n and (not(n & (n-1))) ): # if n is a power of 2, from geeksforgeeks.org
         return False
 
     ff = fft(frameArray, n)
@@ -171,8 +178,7 @@ def fftChunk(frameArray, numPitches):
 
     print("the %d top pitches are:" % (numPitches))
     for i in range(0, numPitches):
-        print(getPitchFromFrequency(frequencyValuePairs[i][0]))
-
+        print(getPitchFromFrequency(frequencyValuePairs[i][0]) + " with amplitude " + str(frequencyValuePairs[i][1]))
    
 
 main()
@@ -184,5 +190,5 @@ main()
 # pass in sound file from command line arg
 # use with recordings - instead of passing by 1-second chunks, pass instead by a rolling one-second chunk of frames
 # make fft work with frame counts that are not a power of 2, or alternatively a 1-second rolling chunk to skip the problem entirely
-
- 
+# make sharp or flat from pitches, instead of just sharp
+# cluster similar pitches so duplicate results aren't added. Use weighted averages to figure out what the pitch was
