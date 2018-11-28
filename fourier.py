@@ -192,4 +192,5 @@ main()
 # make fft work with frame counts that are not a power of 2, or alternatively a 1-second rolling chunk to skip the problem entirely
 # make sharp or flat from pitches, instead of just sharp
 # cluster similar pitches so duplicate results aren't added. Use weighted averages to figure out what the pitch was
-# https://cnx.org/contents/Fujl6E8i@5.8:g8h8qG2L@13/The-Cooley-Tukey-Fast-Fourier-Transform-Algorithm
+# https://cnx.org/contents/Fujl6E8i@5.8:g8h8qG2L@13/The-Cooley-Tukey-Fast-Fourier-Transform-Algorithm'
+# https://aerotwist.com/blog/guitar-tuner/
